@@ -1,18 +1,17 @@
 
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.LinkedHashMap;
 
 public class ExcelWriter {
 
-    public void writeExcel(String in, String out) throws IOException {
-
+    public void writeExcel(LinkedHashMap<String, Student> students, String in, String out) throws IOException {
         FileInputStream fis = new FileInputStream(in);
         XSSFWorkbook wb = new XSSFWorkbook(fis);
         XSSFSheet sheet = wb.getSheetAt(0);
@@ -25,11 +24,67 @@ public class ExcelWriter {
         int stt = 1;
         int loai = 0;
 
-        String[] columns = {
-                "A00", "A01", "B00", "C03", "C04", "D01", "D07", "D09", "D10",
-                "A01x2", "D01x2", "D07x2", "D09x2", "D10x2",
-                "ĐT", "Điểm XT", "ĐT", "Điểm XT", "ĐT", "Điểm XT", "ĐT", "Điểm XT", "ĐT", "Điểm XT",
-                "TT Mã ngành", "TT ĐT", "TT NV", "TT Điểm", "TT Tên ngành", "Loại"
-        };
+        for (Row row : sheet) {
+            if (stt++ <= 1) continue;  //Skip First Row
+            String sbd = getValue(formulaEvaluator, row.getCell(0)).toString();
+            Student student = students.get(sbd);
+            int col = 1;
+            if (student.diemtotnghiep.Toan != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Toan));
+            else
+                col++;
+            if (student.diemtotnghiep.Van != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Van));
+            else
+                col++;
+            if (student.diemtotnghiep.TiengAnh != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.TiengAnh));
+            else
+                col++;
+            if (student.diemtotnghiep.Ly != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Ly));
+            else
+                col++;
+            if (student.diemtotnghiep.Hoa != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Hoa));
+            else
+                col++;
+            if (student.diemtotnghiep.Sinh != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Sinh));
+            else
+                col++;
+            if (student.diemtotnghiep.Su != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Su));
+            else
+                col++;
+            if (student.diemtotnghiep.Dia != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.Dia));
+            else
+                col++;
+
+            if (student.diemtotnghiep.GDCD != null)
+                row.createCell(col++).setCellValue(String.format("%.2f", student.diemtotnghiep.GDCD));
+            else
+                col++;
+        }
+
+        FileOutputStream fileOut = new FileOutputStream(out);
+        wb.write(fileOut);
+        fileOut.close();
+        wb.close();
+        System.out.println("Xong");
+    }
+
+    Serializable getValue(FormulaEvaluator formulaEvaluator, Cell cell) {
+        if (formulaEvaluator.evaluateInCell(cell) == null)
+            return null;
+        else
+            switch (formulaEvaluator.evaluateInCell(cell).getCellTypeEnum()) {
+                case NUMERIC:
+                    return cell.getNumericCellValue();
+                case STRING:
+                    return cell.getStringCellValue();
+            }
+        return null;
     }
 }

@@ -9,6 +9,7 @@ public class DiemTotNghiep {
     public Double Sinh;
     public Double Su;
     public Double Dia;
+    public Double GDCD;
 
     public LinkedHashMap<String, Double> DiemToHop = new LinkedHashMap<>();
 
@@ -23,6 +24,7 @@ public class DiemTotNghiep {
                 ", Sinh=" + Sinh +
                 ", Su=" + Su +
                 ", Dia=" + Dia +
+                ", GDCD=" + GDCD +
                 '}';
     }
 }

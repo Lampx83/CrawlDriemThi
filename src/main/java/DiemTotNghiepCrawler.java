@@ -4,8 +4,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +51,8 @@ public class DiemTotNghiepCrawler {
                             diemTotNghiep.Dia = Double.parseDouble(element.getElementsByClass("font-weight-bold").text());
                         } else if (element.toString().contains("N1")) {
                             diemTotNghiep.TiengAnh = Double.parseDouble(element.getElementsByClass("font-weight-bold").text());
+                        }else if (element.toString().contains("GDCD")) {
+                            diemTotNghiep.GDCD = Double.parseDouble(element.getElementsByClass("font-weight-bold").text());
                         }
                     }
                     System.err.println(i + " " + URL + "': OK");
@@ -61,23 +66,28 @@ public class DiemTotNghiepCrawler {
         return diemTotNghiep;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        int from = 10000;
-        int to = 619999;
-        ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(to - from);
+    public static void main(String[] args) throws InterruptedException, IOException {
+        String file  = "sobaodanh1.xlsx";
+
+        LinkedHashMap<String, Student> students = new ExcelReader().readExcel(file);
+        ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(students.size());
         ThreadPoolExecutor pool = new ThreadPoolExecutor(30, 60, 1, TimeUnit.HOURS, queue);
-        for (int i = 10000; i <= to; i++) {
+        Set<String> keys = students.keySet();
+        int i = 0;
+        for (String key : keys) {
+            i++;
+//            if (i >= 100)
+//                break;
+
             int finalI = i;
             pool.execute(() -> {
-                DiemTotNghiep diemtotnghiep = new DiemTotNghiepCrawler().getPageLinks(finalI, "https://vietnamnet.vn/vn/giao-duc/tra-cuu-diem-thi-thpt/?y=2021&sbd=" + finalI);
-                if (diemtotnghiep != null) {
-
-                }
+                Student student = students.get(key);
+                student.diemtotnghiep = new DiemTotNghiepCrawler().getPageLinks(finalI, "https://vietnamnet.vn/vn/giao-duc/tra-cuu-diem-thi-thpt/?y=2021&sbd=" + students.get(key).sobaodanh);
             });
         }
-
         pool.shutdown();
-        while (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+        while (!pool.awaitTermination(1, TimeUnit.SECONDS)) {
         }
+        new ExcelWriter().writeExcel(students, file, file);
     }
 }
